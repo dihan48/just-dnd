@@ -1,0 +1,37 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: unset;
+}
+
+.wrapper {
+  display: flex;
+  margin: 15px;
+}
+
+.dragList {
+  margin: 15px;
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  grid-template-rows: repeat(7, 60px);
+  gap: 8px;
+}
+
+.dropList {
+  margin: 15px;
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  grid-template-rows: repeat(7, 60px);
+  gap: 8px;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  border: 1px solid black;
+}
