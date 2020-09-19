@@ -1,2 +1,2 @@
 # just-dnd
-Created with CodeSandbox
+Just Drag and Drop for React
