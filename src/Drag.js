@@ -132,7 +132,7 @@ export function useDrag(props) {
     return () => {
       dragCurrent.removeEventListener("mousedown", handlerMouseDown);
     };
-  }, [data, type]);
+  }, []);
 
   return [{ isDragging }, drag];
 }

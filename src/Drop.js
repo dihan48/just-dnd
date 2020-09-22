@@ -56,7 +56,7 @@ export function useDrop(props) {
       currentDrop.removeEventListener("mouseenter", handlerMouseEnter);
       currentDrop.removeEventListener("mouseleave", handlerMouseLeave);
     };
-  }, [accept, data, handlerDrop]);
+  }, []);
 
   if (customCanDrop) {
     if (customCanDrop(state.currentDrag, state.currentDrop)) {
