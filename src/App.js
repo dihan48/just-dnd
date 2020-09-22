@@ -25,9 +25,9 @@ export default function App() {
 }
 
 function Item(props) {
-  const { isDragging, drag } = useDrag({
+  const [{ isDragging }, drag] = useDrag({
     type: props.type,
-    sourceData: { type: props.type }
+    data: { type: props.type }
   });
   return (
     <div
@@ -43,32 +43,29 @@ function Item(props) {
 }
 
 function Drop(props) {
-  const { isOver, canDropped, drop } = useDrop({
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: props.accept,
     handlerDrop: (source, target) => {
       console.log(source, target);
     },
-    targetData: props.targetData
+    data: props.targetData
   });
-
   return (
     <div
       className="dropList"
       ref={drop}
-      style={isOver || canDropped ? { position: "relative" } : {}}
+      style={isOver || canDrop ? { position: "relative" } : {}}
     >
       {[...Array(35)].map((x, i) => (
         <div
           className="cell"
           key={i}
-          style={
-            isOver || canDropped ? { position: "relative", zIndex: 2 } : {}
-          }
+          style={isOver || canDrop ? { position: "relative", zIndex: 2 } : {}}
         />
       ))}
-      {canDropped && isOver && <Overlay color="green" />}
-      {canDropped && !isOver && <Overlay color="blue" />}
-      {!canDropped && isOver && <Overlay color="red" />}
+      {canDrop && isOver && <Overlay color="green" />}
+      {canDrop && !isOver && <Overlay color="blue" />}
+      {!canDrop && isOver && <Overlay color="red" />}
     </div>
   );
 }
