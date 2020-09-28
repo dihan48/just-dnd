@@ -31,13 +31,20 @@ root.addEventListener("mouseup", handlerMouseUp);
 function handlerMouseUp(event) {
   event.preventDefault();
   root.removeEventListener("mousemove", handlerMouseMove);
+
   if (!state.currentDrag) return;
+
   state.preview && removePreview();
+
+  state.currentDrag && state.currentDrag.setIsDragging(false);
 
   if (
     state.currentDrop &&
     state.currentDrop.handlerDrop &&
-    validType(state.currentDrop.accept, state.currentDrag.type)
+    validType(
+      state.currentDrop.accept,
+      state.currentDrag.latestProps.current.type
+    )
   ) {
     state.currentDrop.handlerDrop(state.currentDrag, state.currentDrop);
   }
@@ -47,7 +54,6 @@ function handlerMouseUp(event) {
     item.setCanDrop(false);
   });
 
-  state.currentDrag.setIsDragging(false);
   state.currentDrag = null;
 }
 
@@ -76,63 +82,75 @@ function validType(accept, type) {
   }
 }
 
-export function useDrag(props) {
-  const data = props.data ? props.data : null;
-  const type = props.type ? props.type : null;
+function createPreview(event) {
+  state.preview && removePreview();
 
+  let previewNode = event.currentTarget.cloneNode(true);
+
+  previewNode.style.position = "fixed";
+  previewNode.style.left = 0;
+  previewNode.style.top = 0;
+  previewNode.style.opacity = 0.5;
+  previewNode.style.zIndex = 100;
+  previewNode.style.pointerEvents = "none";
+
+  document.body.appendChild(previewNode);
+  state.preview = previewNode;
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  state.preview.offsetX = event.clientX - rect.left;
+  state.preview.offsetY = event.clientY - rect.top;
+}
+
+export function useDrag(props) {
   const drag = useRef(null);
+
+  const latestProps = useRef(props);
+  useEffect(() => {
+    latestProps.current = props;
+  });
+
+  const [uid] = useState({});
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    drags.push({ drag, setIsDragging, data, type });
+    if (drag && drag.current) {
+      const dragCurrent = drag.current;
 
-    const handlerMouseDown = (event) => {
-      event.preventDefault();
-      if (event.button !== 0) return;
-
-      mousePos.x = event.clientX;
-      mousePos.y = event.clientY;
-
-      root.addEventListener("mousemove", handlerMouseMove);
-      window.requestAnimationFrame(dragUpdate);
-
-      drags.forEach((item) => {
-        if (item.drag.current === drag.current) {
-          item.setIsDragging(true);
-          state.currentDrag = item;
-
-          drops.forEach((dropItem) => {
-            dropItem.setCanDrop(validType(dropItem.accept, item.type));
-          });
-        }
+      const inDrags = drags.some((item) => {
+        return item.uid === uid;
       });
 
-      state.preview && removePreview();
+      if (inDrags === false) {
+        const currentDrag = { uid, drag, setIsDragging, latestProps };
+        drags.push(currentDrag);
 
-      let previewNode = event.currentTarget.cloneNode(true);
+        const handlerMouseDown = (event) => {
+          event.preventDefault();
+          if (event.button !== 0) return;
 
-      previewNode.style.position = "fixed";
-      previewNode.style.left = 0;
-      previewNode.style.top = 0;
-      previewNode.style.opacity = 0.5;
-      previewNode.style.zIndex = 100;
-      previewNode.style.pointerEvents = "none";
+          mousePos.x = event.clientX;
+          mousePos.y = event.clientY;
 
-      document.body.appendChild(previewNode);
-      state.preview = previewNode;
+          root.addEventListener("mousemove", handlerMouseMove);
+          window.requestAnimationFrame(dragUpdate);
 
-      const rect = event.currentTarget.getBoundingClientRect();
-      state.preview.offsetX = event.clientX - rect.left;
-      state.preview.offsetY = event.clientY - rect.top;
-    };
+          setIsDragging(true);
+          state.currentDrag = currentDrag;
 
-    drag.current.addEventListener("mousedown", handlerMouseDown);
-    const dragCurrent = drag.current;
+          drops.forEach((dropItem) => {
+            dropItem.setCanDrop(
+              validType(dropItem.accept, latestProps.current.type)
+            );
+          });
 
-    return () => {
-      dragCurrent.removeEventListener("mousedown", handlerMouseDown);
-    };
-  }, []);
+          createPreview(event);
+        };
+
+        dragCurrent.addEventListener("mousedown", handlerMouseDown);
+      }
+    }
+  }, [uid]);
 
   return [{ isDragging }, drag];
 }

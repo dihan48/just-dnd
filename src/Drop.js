@@ -4,10 +4,11 @@ import { state, drops } from "./State";
 export const initedDrops = [];
 
 export function useDrop(props) {
-  const data = props.data ? props.data : null;
-  const accept = props.accept ? props.accept : null;
+  const latestProps = useRef(props);
+  useEffect(() => {
+    latestProps.current = props;
+  });
 
-  const handlerDrop = props.handlerDrop ? props.handlerDrop : null;
   const customCanDrop = props.customCanDrop ? props.customCanDrop : null;
   const drop = useRef(null);
 
@@ -16,8 +17,7 @@ export function useDrop(props) {
 
   useEffect(() => {
     let id =
-      drops.push({ drop, setIsOver, setCanDrop, handlerDrop, data, accept }) -
-      1;
+      drops.push({ drop, setIsOver, setCanDrop, ...latestProps.current }) - 1;
 
     function handlerMouseEnter(event) {
       if (
@@ -29,9 +29,7 @@ export function useDrop(props) {
           drop,
           setIsOver,
           setCanDrop,
-          handlerDrop,
-          data,
-          accept
+          ...latestProps.current
         };
         setIsOver(true);
       }
@@ -59,7 +57,14 @@ export function useDrop(props) {
   }, []);
 
   if (customCanDrop) {
-    if (customCanDrop(state.currentDrag, state.currentDrop)) {
+    if (
+      customCanDrop(state.currentDrag, {
+        drop,
+        setIsOver,
+        setCanDrop,
+        ...props
+      })
+    ) {
       return [{ isOver, canDrop }, drop];
     } else {
       return [{ isOver: false, canDrop: false }, drop];
